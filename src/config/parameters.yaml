@@ -1,0 +1,40 @@
+vis:
+  vis_left_window_position: [225,100]
+  vis_right_window_position: [875,100]
+  chessboard_corners_vis: true
+  chessboard_corners_window_position: [300,600]
+  center_corners_vis: true
+  center_window_position: [950,600]
+
+processing:
+  min_percentile: 25
+  max_percentile: 88
+
+chessboard:
+  pattern_size: [8,6]
+  squares_size: [22.25,20.83]
+  roi: [100, 100, 400, 380]
+  # roi: [0,0,640,480]
+roi:
+  roi_origin: [0, 200]
+  roi_width: 640
+  roi_height: 240
+
+SGBM:
+  BlockSize: 11
+  NumDisparities: 64
+  PreFilterCap: 63
+  MinDisparity: 0
+  UniquenessRatio: 15
+  SpeckleWindowSize: 100
+  SpeckleRange: 32
+  Disp12MaxDiff: 1
+  P1: 968 # 8 * channels * blocksize
+  P2: 3872 # P1 * 4
+  Mode: cv::StereoSGBM::MODE_SGBM_3WAY
+
+
+disparity:
+  focal: 567.2
+  baseline: 92.226
+  window_radius: 20
