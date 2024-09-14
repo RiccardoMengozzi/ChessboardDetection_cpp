@@ -167,8 +167,7 @@ cv::Mat computeDisparityMap(cv::Mat imgL, cv::Mat imgR, int offset, int num_disp
     SGBM->compute(imgL, imgR, disparity);
     // Convert disparity to float for further processing
     disparity.convertTo(disparity, CV_32F);
-    disparity = disparity / 16
-;
+    disparity = disparity / 16;
 
     return disparity;
 }
@@ -176,23 +175,15 @@ cv::Mat computeDisparityMap(cv::Mat imgL, cv::Mat imgR, int offset, int num_disp
 
 float computeMainDisparity(cv::Mat disparityMap, cv::Point2i center, int wind_radius) {
     cv::Rect roi(center.x - wind_radius, center.y - wind_radius, wind_radius * 2, wind_radius * 2);
-    std::cout << "roi_x" << roi.x << std::endl;
-    std::cout << "roi_y" << roi.y << std::endl;
-    std::cout << "roi_width" << roi.width << std::endl;
-    std::cout << "roi_height" << roi.height << std::endl;
-    std::cout << "rows" << disparityMap.rows << std::endl;
-    std::cout << "cols" << disparityMap.cols << std::endl;
     float sum = 0;
     float dmain = 0;
     for (int i = roi.x; i < roi.x + roi.width; i++) {
         for (int j = roi.y; j < roi.y + roi.height; j++) {
             sum += static_cast<float>(disparityMap.at<uchar>(j,i));
-            std::cout << "value at [" << j << "," << i << "] = " << static_cast<float>(disparityMap.at<uchar>(j,i)) << std::endl;
+            // std::cout << "value at [" << j << "," << i << "] = " << static_cast<float>(disparityMap.at<uchar>(j,i)) << std::endl;
         }
     }
     dmain = sum / roi.area();
-    std::cout << "sum = " << sum << std::endl;
-    // std::cout << "dmain = " << dmain << std::endl;
     return dmain;
 }
 

@@ -94,7 +94,7 @@ class Chessboard {
             Center,
             Corners,
         };
-        void check(CheckType type) const;
+        void check(CheckType type, const char* file, int line) const ;
 
 };
 

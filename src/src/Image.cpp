@@ -1,8 +1,9 @@
 #include <Image.hpp>
 #include <numeric>
 
-#define THROW_RUNTIME_ERROR(msg) throw std::runtime_error(std::string("Error: ") + msg + " at " + __FILE__ + ":" + std::to_string(__LINE__))
-
+#define THROW_RUNTIME_ERROR_AT(msg, file, line) throw std::runtime_error(std::string("Error: ") + msg + " at " + file + ":" + std::to_string(line))
+#define THROW_RUNTIME_ERROR(msg) THROW_RUNTIME_ERROR_AT(msg, __FILE__, __LINE__)
+#define CHECK(type) check(type, __FILE__, __LINE__)
 
 Image::Image() :    image(cv::Mat()),
                     min_percentile(0),
@@ -10,16 +11,18 @@ Image::Image() :    image(cv::Mat()),
 
 Image::Image(const cv::Mat& img) : image(img.clone()) {}
 
-void Image::check(CheckType type) const {
+Image::~Image() {}
+
+void Image::check(CheckType type, const char* file, int line) const {
     switch(type)
     {
         case CheckType::EmptyImage:
             if (this->image.empty()) {
-                THROW_RUNTIME_ERROR("Error: The image is empty! Please set an image with setImage().");
+                THROW_RUNTIME_ERROR_AT("Error: The image is empty! Please set an image with setImage().", file, line);
             }
         case CheckType::StretchingBounds:
             if (!this->bounds_set) {
-                THROW_RUNTIME_ERROR("Error: Stretching percentile bounds have not been set yet. Please use setStretchingBounds().");
+                THROW_RUNTIME_ERROR_AT("Error: Stretching percentile bounds have not been set yet. Please use setStretchingBounds().", file, line);
             }
     }
 }
@@ -29,7 +32,7 @@ void Image::setImage(cv::Mat img) {
 }
 
 cv::Mat Image::getImage() {
-    check(CheckType::EmptyImage);
+    CHECK(CheckType::EmptyImage);
     return this->image;
 }
 
@@ -46,7 +49,7 @@ void Image::setStretchingBounds(std::vector<int> bounds) {
 }
 
 std::vector<int> Image::getStretchingBounds() {
-    check(CheckType::StretchingBounds);
+    CHECK(CheckType::StretchingBounds);
     return {this->min_percentile, this->max_percentile};
 }
 
@@ -66,7 +69,7 @@ cv::Rect Image::getRoi() {
 }
 
 std::vector<int> Image::findPercentileValues(std::vector<int> histogram) {
-    check(CheckType::StretchingBounds);
+    CHECK(CheckType::StretchingBounds);
     std::vector<int> idxs(2);
     int s = 0;
     int idx_min = 0;
@@ -105,7 +108,7 @@ cv::Mat Image::linearStretching(std::vector<int> minmax_values) {
 }
 
 std::vector<int> Image::computeHistogram() {
-    check(CheckType::EmptyImage);
+    CHECK(CheckType::EmptyImage);
     std::vector<int> histogram(256);
         for (int i = 0; i < this->image.rows; ++i) {
             for (int j = 0; j < this->image.cols; ++j) {
@@ -128,4 +131,3 @@ cv::Mat Image::cropImage() {
     return cropped_img;
 }
 
-Image::~Image() {}

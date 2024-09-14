@@ -105,7 +105,7 @@ class Image {
             EmptyImage,
             StretchingBounds,
         };
-        void check(CheckType type) const;
+        void check(CheckType type, const char* file, int line) const ;
         std::vector<int> findPercentileValues(std::vector<int> histogram);
         cv::Mat linearStretching(std::vector<int> minmax_values);
 };

@@ -11,7 +11,7 @@ include_directories(src/include)
 add_executable(ChessboardDetection_cpp 
     src/src/main.cpp 
     src/src/Chessboard.cpp
-    src/src/Distance.cpp
+    src/src/Disparity.cpp
     src/src/Image.cpp
 )
 

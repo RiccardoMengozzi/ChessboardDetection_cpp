@@ -1,40 +1,43 @@
 #include <Chessboard.hpp>
 
-#define THROW_RUNTIME_ERROR(msg) throw std::runtime_error(std::string("Error: ") + msg + " at " + __FILE__ + ":" + std::to_string(__LINE__))
+#define THROW_RUNTIME_ERROR_AT(msg, file, line) throw std::runtime_error(std::string("Error: ") + msg + " at " + file + ":" + std::to_string(line))
+#define THROW_RUNTIME_ERROR(msg) THROW_RUNTIME_ERROR_AT(msg, __FILE__, __LINE__)
+#define CHECK(type) check(type, __FILE__, __LINE__)
 
 Chessboard::Chessboard() :  pattern_size(pattern_size),
                             squares_size(squares_size) {}
 
+Chessboard::~Chessboard() {}
 
-void Chessboard::check(CheckType type) const {
+void Chessboard::check(CheckType type, const char* file, int line) const {
 
     switch (type)
     {
     case CheckType::EmptyImage :
             if (this->img.empty()) {
-                THROW_RUNTIME_ERROR("Error: The image is empty! Please set an image with setImage()");
+                THROW_RUNTIME_ERROR_AT("Error: The image is empty! Please set an image with setImage()", file, line);
             }
         break;
     
     case CheckType::PatternSize:
             if (this->pattern_size.empty()) {
-                THROW_RUNTIME_ERROR("Error: pattern size not defined! Please set a pattern size with setPatternSize()");
+                THROW_RUNTIME_ERROR_AT("Error: pattern size not defined! Please set a pattern size with setPatternSize()", file, line);
             }
         break;
 
     case CheckType::SquaresSize:
             if (this->squares_size.empty()) {
-                THROW_RUNTIME_ERROR("Error: squares size is empty! Please set the squares size with setSquaresSize()");
+                THROW_RUNTIME_ERROR_AT("Error: squares size is empty! Please set the squares size with setSquaresSize()", file, line);
             }
         break;
     case CheckType::Center:
             if (!this->center_computed) {
-                THROW_RUNTIME_ERROR("Error: chessboard center has not been computed yet! Please compute the chessboard center with computeChessboardCenter()");
+                THROW_RUNTIME_ERROR_AT("Error: chessboard center has not been computed yet! Please compute the chessboard center with computeChessboardCenter()", file, line);
             }
         break;
     case CheckType::Corners:
             if (this->corners.empty()) {
-                THROW_RUNTIME_ERROR("Error: corners is empty! Please compute corners with detect()");
+                THROW_RUNTIME_ERROR_AT("Error: corners is empty! Please compute corners with detect()", file, line);
             }
         break;
     }
@@ -49,21 +52,21 @@ void Chessboard::setSquaresSize(cv::Size2f squares_size) {
 }
 
 void Chessboard::setImage(cv::Mat img) {
-    this->img = img;
+    this->img = img.clone();
 }
 
 cv::Size Chessboard::getPatternSize() {
-    check(CheckType::PatternSize);
+    CHECK(CheckType::PatternSize);
     return this->pattern_size;
 }
 
 cv::Size2f Chessboard::getSquaresSize() {
-    check(CheckType::SquaresSize);
+    CHECK(CheckType::SquaresSize);
     return this->squares_size;
 }
 
 cv::Mat Chessboard::getImage() {
-    check(CheckType::EmptyImage);
+    CHECK(CheckType::EmptyImage);
     return this->img;
 }
 
@@ -72,20 +75,20 @@ bool Chessboard::isFound() {
 }
 
 cv::Point2i Chessboard::getCenter() {
-    check(CheckType::Center);
+    CHECK(CheckType::Center);
     return this->center;
 }
 
 std::vector<cv::Point2f> Chessboard::getCorners() {
-    check(CheckType::Corners);
+    CHECK(CheckType::Corners);
     return this->corners;
 }
 
 
 void Chessboard::detect(bool vis, const cv::Point2i image_position, const std::string image_name) {
-    check(CheckType::EmptyImage);
-    check(CheckType::PatternSize);
-    check(CheckType::SquaresSize);
+    CHECK(CheckType::EmptyImage);
+    CHECK(CheckType::PatternSize);
+    CHECK(CheckType::SquaresSize);
     this->found = cv::findChessboardCorners(this->img, this->pattern_size, this->corners);
     if (this->found) {
         cv::cornerSubPix(this->img, this->corners, cv::Size(5, 5), cv::Size(-1, -1),
@@ -104,7 +107,7 @@ void Chessboard::detect(bool vis, const cv::Point2i image_position, const std::s
 
 void Chessboard::computeCenter(bool vis, const cv::Point2i image_position, const std::string image_name) {
     if(this->found) {
-        check(CheckType::Corners);
+        CHECK(CheckType::Corners);
         float sum_x = 0;
         float sum_y = 0;
         
@@ -117,7 +120,6 @@ void Chessboard::computeCenter(bool vis, const cv::Point2i image_position, const
         this->center.y = static_cast<int>(sum_y / this->corners.size());
 
         if (vis) {
-            std::cout << center << '\n';
             cv::namedWindow(image_name, cv::WINDOW_AUTOSIZE);
             cv::moveWindow(image_name, image_position.x, image_position.y);
             cv::Mat vis_img = this->img.clone();
@@ -151,4 +153,3 @@ void Chessboard::computeCenter(bool vis, const cv::Point2i image_position, const
 
 
 
-Chessboard::~Chessboard() {}
