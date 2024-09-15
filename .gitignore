@@ -1,0 +1,7 @@
+/build/
+/CMakeFiles/
+.vscode
+ChessboardDetection_cpp
+*.cmake
+Makefile
+CMakeCache.txt

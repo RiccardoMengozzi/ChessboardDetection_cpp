@@ -1,0 +1,41 @@
+vis:
+  vis_left_window_position: [0,0]
+  vis_right_window_position: [650,0]
+  chessboard_corners_vis: true
+  chessboard_corners_window_position: [0,600]
+  center_corners_vis: true
+  center_window_position: [650,600]
+  disparity_vis: true
+  disparity_window_position: [1300,0]
+  main_disparity_roi_vis: true
+  main_disparity_roi_window_position: [1300,600]
+  vertices_vis: false
+  vertices_window_position: [0,600]
+
+processing:
+  min_percentile: 25
+  max_percentile: 88
+
+chessboard:
+  pattern_size: [8,6]
+  squares_size: [22.25,20.83]
+  roi: [100, 100, 400, 380]
+
+disparity:
+  roi: [100, 100, 400, 380]
+  SGBM:
+    block_size: 9
+    num_disparities: 128
+    pre_filter_cap: 63
+    min_disparity: 0
+    offset: 0
+    uniqueness_ratio: 10
+    speckle_window_size: 0
+    speckle_range: 0
+    disp_12_max_diff: -1
+    p1: 968 # 8 * channels * blocksize
+    p2: 3872 # P1 * 4
+    mode: 1 #3WAY
+  focal: 567.2
+  baseline: 92.226
+  window_radius: 40
