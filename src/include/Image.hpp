@@ -84,6 +84,10 @@ class Image {
          * @return cv::Mat The contrast-stretched image.
          */
         cv::Mat stretchImage();
+        /**
+         * @brief Crops the image based on the specified Region of Interest (ROI).
+         * @return A cropped cv::Mat object containing the image within the ROI.
+         */
         cv::Mat cropImage();
 
 

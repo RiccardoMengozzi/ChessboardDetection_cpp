@@ -138,25 +138,35 @@ void Disparity::assignSGBMParameters() {
 
 cv::Mat Disparity::computeDisparityMap(bool vis, const cv::Point2i image_position, const std::string image_name) {
     Disparity::assignSGBMParameters();
+    //convert image for finer computations
     this->disparityMap.convertTo(this->disparityMap, CV_32F);
     this->SGBM->compute(this->imgL, this->imgR, this->disparityMap);
+
+    //divide pixels value by 16 for real values of disparity
+    this->disparityMap = this->disparityMap / 16;
+
+    //convert back to CV_8U
+    this->disparityMap.convertTo(this->disparityMap, CV_8U);
+
+    //apply a median filter to get rid of not found pixels in the disparity map
+    cv::medianBlur(this->disparityMap, this->disparityMap, 17);
+
+
     if (vis) {
         cv::namedWindow(image_name, cv::WINDOW_AUTOSIZE);
         cv::moveWindow(image_name, image_position.x, image_position.y);
         cv::Mat vis_img;
         cv::normalize(this->disparityMap, vis_img, 0, 255, cv::NORM_MINMAX);
-        vis_img.convertTo(vis_img, CV_8U);
         cv::imshow(image_name, vis_img);
         cv::waitKey(1);
     }
-    this->disparityMap = this->disparityMap / 16;
+
     return disparityMap;
 }
 
 float Disparity::computeMainDisparity(bool vis, const cv::Point2i image_position, const std::string image_name) {
     CHECK(CheckType::EmptyDisparityMap);
     CHECK(CheckType::DmainRoi);
-    std::cout << "roi" << dmain_roi << '\n';
     float sum = 0;
     int count = 0;
     float dmain = 0;
@@ -165,7 +175,6 @@ float Disparity::computeMainDisparity(bool vis, const cv::Point2i image_position
         for (int j = this->dmain_roi.y; j < this->dmain_roi.y + this->dmain_roi.height; j++) {
             value = static_cast<float>(disparityMap.at<uchar>(j,i));
             if (value != 255 && value > 0) {
-                std::cout << "VALUE = " << value << '\n';
                 sum += value;
                 count++;
             }
@@ -179,6 +188,7 @@ float Disparity::computeMainDisparity(bool vis, const cv::Point2i image_position
         cv::Mat vis_img;
         cv::normalize(this->disparityMap, vis_img, 0, 255, cv::NORM_MINMAX);
         vis_img.convertTo(vis_img, CV_8U);
+        cv::cvtColor(vis_img, vis_img, cv::COLOR_GRAY2BGR);
         cv::rectangle(vis_img, this->dmain_roi, (255,255,255), 5);
         cv::imshow(image_name, vis_img);
         cv::waitKey(1);
@@ -189,7 +199,18 @@ float Disparity::computeMainDisparity(bool vis, const cv::Point2i image_position
 
 float Disparity::computeDistance() {
     CHECK(CheckType::FocalAndBaseline);
-    return (this->focal * this->baseline / this->dmain / 1000);
+    this->distance = this->focal * this->baseline / this->dmain / 1000;
+    return this->distance;
+}
+
+
+cv::Size2f Disparity::computeChessboardSize(std::vector<cv::Point2i> vertices, cv::Size parttern_size) {
+    float size_pxl_width = cv::norm(vertices.at(1) - vertices.at(0));
+    float size_pxl_height = cv::norm(vertices.at(2) - vertices.at(0));
+    
+    this->chessSize.width = this->distance * 1000 * size_pxl_width / this->focal;
+    this->chessSize.height = this->distance * 1000 * size_pxl_height / this->focal;
+    return this->chessSize;
 }
 
 

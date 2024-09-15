@@ -98,6 +98,7 @@ void Chessboard::detect(bool vis, const cv::Point2i image_position, const std::s
         cv::namedWindow(image_name, cv::WINDOW_AUTOSIZE);
         cv::moveWindow(image_name, image_position.x, image_position.y);
         cv::Mat vis_img = this->img.clone();
+        cv::cvtColor(this->img, vis_img, cv::COLOR_GRAY2BGR);
         cv::drawChessboardCorners(vis_img, this->pattern_size, this->corners, this->found);
         cv::imshow(image_name, vis_img);
         cv::waitKey(1);
@@ -123,7 +124,8 @@ void Chessboard::computeCenter(bool vis, const cv::Point2i image_position, const
             cv::namedWindow(image_name, cv::WINDOW_AUTOSIZE);
             cv::moveWindow(image_name, image_position.x, image_position.y);
             cv::Mat vis_img = this->img.clone();
-            cv::circle(vis_img, this->center, 5, (255,255,255), 3);
+            cv::cvtColor(this->img, vis_img, cv::COLOR_GRAY2BGR);
+            cv::circle(vis_img, this->center, 5, (0,0,255), 3);
             cv::imshow(image_name, vis_img);
             cv::waitKey(1); 
         }
@@ -131,25 +133,34 @@ void Chessboard::computeCenter(bool vis, const cv::Point2i image_position, const
 }
 
 
-// std::vector<cv::Point2f> Chessboard::createChessboardCoordinates() {
-//     // Initialize a vector to hold all points in a flattened format
-//     std::vector<cv::Point2f> chessboard_coordinates;
-//     chessboard_coordinates.reserve(this->pattern_size.area());
+std::vector<cv::Point2i> Chessboard::computeVertices(bool vis, const cv::Point2i image_position, const std::string image_name) {
+    this->vertices.clear();
+    if(corners.empty()) {
+        this->vertices.push_back(cv::Point2f(0,0));
+        this->vertices.push_back(cv::Point2f(0,0));
+        this->vertices.push_back(cv::Point2f(0,0));
+        this->vertices.push_back(cv::Point2f(0,0));
+        return this->vertices;
+    }
+    this->vertices.push_back(this->corners.at(0));
+    this->vertices.push_back(this->corners.at(this->pattern_size.width - 1));
+    this->vertices.push_back(this->corners.at(this->pattern_size.width * (this->pattern_size.height - 1)));
+    this->vertices.push_back(this->corners.at(this->pattern_size.area() - 1));
+    if (vis) {
+        cv::namedWindow(image_name, cv::WINDOW_AUTOSIZE);
+        cv::moveWindow(image_name, image_position.x, image_position.y);
+        cv::Mat vis_img = this->img.clone();
+        cv::cvtColor(this->img, vis_img, cv::COLOR_GRAY2BGR);    
+        cv::circle(vis_img, this->vertices.at(0), 3, (0,0,255), 3);
+        cv::circle(vis_img, this->vertices.at(1), 3, (0,0,255), 3);
+        cv::circle(vis_img, this->vertices.at(2), 3, (0,0,255), 3);
+        cv::circle(vis_img, this->vertices.at(3), 3, (0,0,255), 3);
+        cv::imshow(image_name, vis_img);
+        cv::waitKey(1); 
+    }
+    return this->vertices;
 
-//     // Iterate through the grid and calculate the coordinates, directly flattening them into the vector
-//     for (int i = 0; i < this->pattern_size.width; ++i) {
-//         for (int j = 0; j < this->pattern_size.height; ++j) {
-//             float x = i * this->squares_size.width;
-//             float y = j * this->squares_size.height;
-
-//             chessboard_coordinates.emplace_back(x, y);  // Add the point directly to the flattened vector
-//         }
-//     }
-
-//     return chessboard_coordinates;
-
-// }
-
+}
 
 
 

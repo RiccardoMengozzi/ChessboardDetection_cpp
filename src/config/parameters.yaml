@@ -6,10 +6,11 @@ vis:
   center_corners_vis: true
   center_window_position: [650,600]
   disparity_vis: true
-  disparity_window_position: [1300,600]
+  disparity_window_position: [1300,0]
   main_disparity_roi_vis: true
-  main_disparity_roi_window_position: [1300,0]
-
+  main_disparity_roi_window_position: [1300,600]
+  vertices_vis: false
+  vertices_window_position: [0,600]
 
 processing:
   min_percentile: 25
@@ -24,7 +25,7 @@ disparity:
   roi: [100, 100, 400, 380]
   SGBM:
     block_size: 9
-    num_disparities: 64
+    num_disparities: 128
     pre_filter_cap: 63
     min_disparity: 0
     offset: 0

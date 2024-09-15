@@ -68,17 +68,40 @@ class Chessboard {
          * @param vis If true, displays the image with detected corners.
          * @throws runtime_error if the image, pattern size, or squares size is not set.
          */
-
-        cv::Point2i getCenter();
         std::vector<cv::Point2f> getCorners();
+        /**
+         * @brief Gets the center point of the detected chessboard.
+         * @return The center point as a cv::Point2i object (integer coordinates).
+         */
+        cv::Point2i getCenter();
+        /**
+         * @brief Detects the chessboard pattern in the image.
+         * @param vis (Optional) Flag to visualize the detection process (default: false).
+         * @param image_position (Optional) Position to display the image (default: (0, 0)).
+         * @param image_name (Optional) Name for the image window (default: "ChessboardVis").
+         */
         void detect(bool vis = false,
                                const cv::Point2i image_position = cv::Point2i(0, 0),
                                const std::string image_name = "ChessboardVis");   
-        // std::vector<cv::Point2f> createChessboardCoordinates();
-
+        /**
+         * @brief Computes the center of the chessboard and optionally visualizes it.
+         * @param vis (Optional) Flag to visualize the center computation process (default: false).
+         * @param image_position (Optional) Position to display the image (default: (0, 0)).
+         * @param image_name (Optional) Name for the image window (default: "CenterVis").
+         */
         void computeCenter(bool vis = false,
                            const cv::Point2i image_position = cv::Point2i(0, 0), 
                            const std::string image_name = "CenterVis");
+        /**
+         * @brief Computes the vertices of the chessboard and optionally visualizes them.
+         * @param vis (Optional) Flag to visualize the vertices computation process (default: false).
+         * @param image_position (Optional) Position to display the image (default: (0, 0)).
+         * @param image_name (Optional) Name for the image window (default: "VerticesVis").
+         * @return A vector of vertices as cv::Point2i objects (integer coordinates).
+         */
+        std::vector<cv::Point2i> computeVertices(bool vis = false,
+                                                 const cv::Point2i image_position = cv::Point2i(0, 0), 
+                                                 const std::string image_name = "VerticesVis");
     private:
         cv::Size pattern_size;
         cv::Size2f squares_size;
@@ -87,6 +110,7 @@ class Chessboard {
         cv::Point2i center;
         bool center_computed = false;
         cv::Mat img;
+        std::vector<cv::Point2i> vertices;
         enum class CheckType {
             EmptyImage,
             PatternSize,

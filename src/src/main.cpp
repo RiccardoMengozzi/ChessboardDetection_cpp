@@ -19,9 +19,9 @@ class VideoProcessing {
         std::filesystem::path left_video_directory, right_video_directory, config_directory;
         cv::Point2i vis_left_window_position, vis_right_window_position;
         cv::Point2i chessboard_corners_window_position, center_window_position;
-        cv::Point2i  disparity_window_position, main_disparity_roi_window_position;
+        cv::Point2i  disparity_window_position, main_disparity_roi_window_position, vertices_window_position;
 
-        bool chessboard_corners_vis, center_vis, disparity_vis, main_disparity_roi_vis;
+        bool chessboard_corners_vis, center_vis, disparity_vis, main_disparity_roi_vis, vertices_vis;
         int min_percentile, max_percentile;
 
         cv::VideoCapture videoL;  // Capture for left video
@@ -44,6 +44,7 @@ class VideoProcessing {
         float focal;
         float baseline;
         int dmain_window_radius;
+        std::vector<cv::Point2i> vertices; 
 
     public:
         VideoProcessing(std::filesystem::path left_video_directory,
@@ -56,6 +57,10 @@ class VideoProcessing {
                                                                     config_directory(config_directory) {}
 
         void run() {
+            ////////////////////////////////////////////////////////////////////////////////////////////7
+            //////////////////////////   CONFIGURATION PARAMETERS EXTRACTION   //////////////////////////
+            ////////////////////////////////////////////////////////////////////////////////////////////7
+
             config = YAML::LoadFile(config_directory);
 
             vis_left_window_position.x = config["vis"]["vis_left_window_position"][0].as<int>();
@@ -70,11 +75,14 @@ class VideoProcessing {
             disparity_window_position.y = config["vis"]["disparity_window_position"][1].as<int>();
             main_disparity_roi_window_position.x = config["vis"]["main_disparity_roi_window_position"][0].as<int>();
             main_disparity_roi_window_position.y = config["vis"]["main_disparity_roi_window_position"][1].as<int>();
+            vertices_window_position.x = config["vis"]["vertices_window_position"][0].as<int>();
+            vertices_window_position.y = config["vis"]["vertices_window_position"][1].as<int>();
 
             chessboard_corners_vis = config["vis"]["chessboard_corners_vis"].as<bool>();
             center_vis = config["vis"]["center_corners_vis"].as<bool>();
             disparity_vis = config["vis"]["disparity_vis"].as<bool>();
             main_disparity_roi_vis = config["vis"]["main_disparity_roi_vis"].as<bool>();
+            vertices_vis = config["vis"]["vertices_vis"].as<bool>();
 
             min_percentile = config["processing"]["min_percentile"].as<int>();
             max_percentile = config["processing"]["max_percentile"].as<int>(); 
@@ -114,7 +122,7 @@ class VideoProcessing {
 
             // Initialize interface windows
             cv::namedWindow("ImageL", cv::WINDOW_AUTOSIZE);
-            cv::moveWindow("ImageL", vis_right_window_position.x, vis_right_window_position.y);
+            cv::moveWindow("ImageL", vis_left_window_position.x, vis_left_window_position.y);
             cv::namedWindow("ImageR", cv::WINDOW_AUTOSIZE);
             cv::moveWindow("ImageR", vis_right_window_position.x, vis_right_window_position.y);
 
@@ -140,36 +148,48 @@ class VideoProcessing {
                 cv::cvtColor(frameL, grayL, cv::COLOR_BGR2GRAY);
                 cv::cvtColor(frameR, grayR, cv::COLOR_BGR2GRAY);
 
+                cv::imshow("ImageL", frameL);
+                cv::waitKey(1);
+                cv::imshow("ImageR", frameR);
+                cv::waitKey(1);
+
+                // Set the left grayscale image and define the Region of Interest (ROI) for the image.
                 image.setImage(grayL);
                 image.setRoi(chess_roi_x, chess_roi_y, chess_roi_width, chess_roi_height);
-                // cropped_img = image.cropImage();
 
-                // image.setImage(cropped_img);
+                // Set the stretching bounds for the image contrast adjustment based on percentile values.
                 image.setStretchingBounds(min_percentile, max_percentile);
-                
                 stretched_img = image.stretchImage();
 
                 chess.setPatternSize(pattern_size);
                 chess.setSquaresSize(squares_size);
+
                 chess.setImage(stretched_img);
 
+                // Detect chessboard corners.
                 chess.detect(chessboard_corners_vis, chessboard_corners_window_position);
-
                 chess.computeCenter(center_vis, center_window_position);
 
+                // Set the left and right stereo images for disparity computation.
                 disparity.setImages(grayL, grayR);
+
+                // Set the ROI for disparity computation on the images.
                 disparity.setRoi(disp_roi_x, disp_roi_y, disp_roi_width, disp_roi_height);
                 disparity.setFocalAndBaseline(focal, baseline);
+
+                // Set the main Region of Interest (ROI) for disparity computation based on the detected chessboard center.
                 disparity.setDmainRoi(chess.getCenter(), dmain_window_radius);
                 disparity.setSGBMParameters(SGBM_parameters);
 
-                if (chess.isFound())
+                // If the chessboard is found, proceed with disparity computation.
                     disparity.computeDisparityMap(disparity_vis, disparity_window_position);
-                    dmain = disparity.computeMainDisparity(main_disparity_roi_vis, main_disparity_roi_window_position);
-                    distance = disparity.computeDistance();
-
-                    std::cout << "distance = " << distance << ", dmain = " << dmain << '\n';
-            }       
+                    dmain = disparity.computeMainDisparity(main_disparity_roi_vis, main_disparity_roi_window_position);                    
+                    distance = disparity.computeDistance();                    
+                    chess.computeVertices(vertices_vis, vertices_window_position);                    
+                    cv::Size chess_size = disparity.computeChessboardSize(chess.computeVertices(), chess.getPatternSize());                    
+                    std::cout << "distance = " << distance << " m" <<  '\t';
+                    std::cout << "size = [" << chess_size.width << "," << chess_size.height << "]mm" << '\n';
+                }    
         }
 };
 
